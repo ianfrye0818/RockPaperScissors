@@ -11,6 +11,7 @@ class RPSClient:
         self.client_socket = None
         self.player_name = ""
         self.opponent_name = ""
+        self.room_id = ""
         self.game_ready = False
         
         # Create GUI
@@ -197,12 +198,18 @@ class RPSClient:
     def handle_server_message(self, message: dict):
         """Handle different types of messages from server"""
         msg_type = message['type']
-        
+
         if msg_type == 'registered':
+            # Store room_id if provided
+            if 'room_id' in message:
+                self.room_id = message['room_id']
             self.root.after(0, self.update_player_info, message)
-            
+
         elif msg_type == 'game_ready':
             self.opponent_name = message['opponent']
+            # Store room_id if provided
+            if 'room_id' in message:
+                self.room_id = message['room_id']
             self.game_ready = True
             # Extract initial scores if provided
             initial_scores = {
@@ -224,7 +231,8 @@ class RPSClient:
     
     def update_player_info(self, message: dict):
         """Update player info labels"""
-        self.player_label.config(text=f"You: {self.player_name} (Player {message['player_num']})")
+        room_info = f" - Room: {self.room_id}" if self.room_id else ""
+        self.player_label.config(text=f"You: {self.player_name} (Player {message['player_num']}){room_info}")
         self.status_label.config(text=message['message'])
     
     def enable_game(self, initial_scores=None):
